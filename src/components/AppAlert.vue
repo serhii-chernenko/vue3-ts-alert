@@ -2,21 +2,31 @@
 import { computed, ref } from 'vue'
 import { Icon } from '@iconify/vue'
 
-const props = defineProps({
-    type: {
-        type: String,
-        default: 'info',
-    },
-    dismissible: {
-        type: Boolean,
-        default: false,
-    },
+type AlertType = 'info' | 'success' | 'warning' | 'error'
+
+interface Props {
+    type: AlertType
+    dismissible: boolean
+}
+
+interface Map extends Record<AlertType, string> {
+    info: string
+    success: string
+    warning: string
+    error: string
+}
+
+const props = withDefaults(defineProps<Props>(), {
+    type: 'info',
+    dismissible: false,
 })
 
-const emit = defineEmits(['dismiss'])
+const emit = defineEmits<{
+    dismiss: [payload: boolean]
+}>()
 
 const classes = computed(() => {
-    const map = {
+    const map: Map = {
         info: 'alert-info',
         success: 'alert-success',
         warning: 'alert-warning',
@@ -26,26 +36,31 @@ const classes = computed(() => {
     return `alert ${map[props.type]}`
 })
 
-const dismissed = ref(false)
+const dismissed = ref<boolean>(false)
 
-const transitionDuration = 500
-const transitionCssRule = `all ${transitionDuration}ms`
+const transitionDuration: number = 500
+const transitionCssRule: string = `all ${transitionDuration}ms`
 
-function handleDismiss() {
+function handleDismiss(): void {
     dismissed.value = true
     setTimeout(() => {
         emit('dismiss', true)
     }, transitionDuration)
 }
 
-const icon = computed(() => {
-    if (!props.type) return 'carbon:information'
-    return {
+const icon = computed<string>(() => {
+    if (!props.type) {
+        return 'carbon:information'
+    }
+
+    const map: Map = {
         info: 'carbon:information',
         success: 'carbon:checkmark-outline',
         warning: 'carbon:warning',
         error: 'carbon:error',
-    }[props.type]
+    }
+
+    return map[props.type]
 })
 </script>
 <template>
@@ -71,6 +86,7 @@ const icon = computed(() => {
 .v-leave-active {
     transition: v-bind(transitionCssRule);
 }
+
 .v-enter-from,
 .v-leave-to {
     opacity: 0;
